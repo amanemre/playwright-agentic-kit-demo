@@ -2,7 +2,10 @@ import { expect, test as base } from '@playwright/test';
 import { ApiEndpoints } from '../../enums/app/app';
 import { generateNewUser } from '../../test-data/factories/app/user.factory';
 import { apiRequest } from '../api/plain-function';
-import { UserResponseSchema } from '../api/schemas/app/userSchema';
+import {
+    AddUserRequest,
+    UserResponseSchema,
+} from '../api/schemas/app/userSchema';
 
 /**
  * Helper fixtures for important, recurring API-driven setup and teardown.
@@ -53,11 +56,8 @@ import { UserResponseSchema } from '../api/schemas/app/userSchema';
 
 // ==================== Types ====================
 
-/** Credentials of a user registered for a single test. */
-export type RegisteredUser = {
-    email: string;
-    password: string;
-};
+/** Name and credentials of a user registered for a single test. */
+export type RegisteredUser = AddUserRequest;
 
 /**
  * Helper fixture type definitions.
@@ -99,7 +99,7 @@ export const test = base.extend<HelperFixtures>({
         expect(UserResponseSchema.parse(body)).toBeTruthy();
 
         // ── YIELD: Passes data to the test ───────────────────────────
-        await use({ email: newUser.email, password: newUser.password });
+        await use(newUser);
 
         // ── TEARDOWN: Runs after the test (even on failure) ──────────
         const login = await apiRequest({
