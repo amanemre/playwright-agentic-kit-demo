@@ -42,54 +42,36 @@ export const INVALID_PASSWORDS = [
 ] as const;
 
 /**
- * `expectedErrors` values are error KINDS, not message strings — the login
- * test maps each kind to the `Messages` enum (static data files may export
- * only literals, so the enum cannot be imported here):
- * - `invalid-credentials` — server-side rejection (request reaches the API)
- * - `email-format` / `email-required` / `password-required` — client-side
- *   form validation (no request is sent)
+ * Login attempts the Contact List app must reject. The app has no client-side
+ * validation: every attempt reaches `POST /users/login`, which answers 401,
+ * and the UI shows the single `Messages.LOGIN_ERROR` banner. Cases that need
+ * the registered account (wrong password, unregistered email) are generated
+ * at runtime in the spec — static data may hold only literals.
  */
 export const INVALID_LOGIN_ATTEMPTS = [
-    {
-        description: 'valid email with wrong password',
-        email: 'test.user@example.com',
-        password: 'WrongPassword123!',
-        expectedErrors: ['invalid-credentials'],
-    },
-    {
-        description: 'valid email with incorrect password',
-        email: 'admin@test.com',
-        password: 'IncorrectPass456$',
-        expectedErrors: ['invalid-credentials'],
-    },
-    {
-        description: 'invalid email format with valid password',
-        email: 'invalid-email',
-        password: 'ValidPassword123!',
-        expectedErrors: ['email-format'],
-    },
-    {
-        description: 'missing local part in email with valid password',
-        email: '@missinglocal.com',
-        password: 'SecurePass789#',
-        expectedErrors: ['email-format'],
-    },
     {
         description: 'empty email and password',
         email: '',
         password: '',
-        expectedErrors: ['email-required', 'password-required'],
     },
     {
-        description: 'invalid email format with short password',
+        description: 'email without password',
+        email: 'unregistered.user@example.com',
+        password: '',
+    },
+    {
+        description: 'password without email',
+        email: '',
+        password: 'SomePassword123!',
+    },
+    {
+        description: 'malformed email',
         email: 'not-an-email',
-        password: '123',
-        expectedErrors: ['email-format'],
+        password: 'SomePassword123!',
     },
     {
-        description: 'incomplete email domain with short password',
-        email: 'missing@domain',
-        password: 'short',
-        expectedErrors: ['invalid-credentials'],
+        description: 'email missing local part',
+        email: '@missinglocal.com',
+        password: 'SomePassword123!',
     },
 ] as const;

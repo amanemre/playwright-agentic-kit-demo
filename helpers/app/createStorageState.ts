@@ -1,6 +1,7 @@
 import { chromium, expect } from '@playwright/test';
 import { ApiEndpoints, StorageStatePaths } from '../../enums/app/app';
-import { AppPage } from '../../pages/app/app.page';
+import { ContactListPage } from '../../pages/app/contact-list.page';
+import { LoginPage } from '../../pages/app/login.page';
 import { ApiRequestFn } from '../../fixtures/api/api-types';
 import {
     UserResponse,
@@ -28,13 +29,12 @@ export async function createAppStorageState(): Promise<void> {
     const browser = await chromium.launch();
     const context = await browser.newContext();
     const page = await context.newPage();
-    const appPage = new AppPage(page);
+    const loginPage = new LoginPage(page);
+    const contactListPage = new ContactListPage(page);
 
-    await appPage.openLoginPage();
-    await appPage.loginAndVerify(
-        process.env.APP_EMAIL!,
-        process.env.APP_PASSWORD!
-    );
+    await loginPage.open();
+    await loginPage.login(process.env.APP_EMAIL!, process.env.APP_PASSWORD!);
+    await expect(contactListPage.contactsTable).toBeVisible();
 
     await context.storageState({ path: StorageStatePaths.APP });
     await browser.close();
@@ -60,7 +60,7 @@ export async function createAppStorageState(): Promise<void> {
  * // In API tests
  * const { status, body } = await apiRequest<UserData>({
  *   method: 'GET',
- *   url: '/users/me',
+ *   url: ApiEndpoints.CURRENT_USER,
  *   baseUrl: process.env.API_URL,
  *   headers: process.env.ACCESS_TOKEN,
  * });
@@ -82,5 +82,5 @@ export async function setUserAccessToken(
     expect(status).toBe(200);
     expect(UserResponseSchema.parse(body)).toBeTruthy();
 
-    process.env['ACCESS_TOKEN'] = body.access_token;
+    process.env['ACCESS_TOKEN'] = body.token;
 }

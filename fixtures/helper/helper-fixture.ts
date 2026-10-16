@@ -1,5 +1,8 @@
-import { test as base } from '@playwright/test';
+import { expect, test as base } from '@playwright/test';
+import { ApiEndpoints } from '../../enums/app/app';
+import { generateNewUser } from '../../test-data/factories/app/user.factory';
 import { apiRequest } from '../api/plain-function';
+import { UserResponseSchema } from '../api/schemas/app/userSchema';
 
 /**
  * Helper fixtures for important, recurring API-driven setup and teardown.
@@ -40,24 +43,20 @@ import { apiRequest } from '../api/plain-function';
  * ```ts
  * import { expect, test } from '../../../fixtures/pom/test-options';
  *
- * test('should display created resource', async ({ createdResource, appPage }) => {
- *     // createdResource was set up before this test runs
- *     await appPage.navigateToResource(createdResource.id);
- *     await expect(appPage.resourceName).toHaveText(createdResource.name);
- *     // createdResource is torn down automatically after this test
+ * test('should log in', async ({ registeredUser, loginPage }) => {
+ *     // registeredUser was created before this test runs
+ *     await loginPage.login(registeredUser.email, registeredUser.password);
+ *     // registeredUser is deleted automatically after this test
  * });
  * ```
  */
 
 // ==================== Types ====================
 
-/**
- * Example resource type -- replace with your actual API response type
- * or use `zOutput<typeof YourSchema>` for Zod-inferred types.
- */
-type ResourceResponse = {
-    id: string;
-    name: string;
+/** Credentials of a user registered for a single test. */
+export type RegisteredUser = {
+    email: string;
+    password: string;
 };
 
 /**
@@ -66,47 +65,60 @@ type ResourceResponse = {
  */
 export type HelperFixtures = {
     /**
-     * Creates a resource via API before the test and deletes it after.
-     * Replace this example with your actual setup/teardown operations.
+     * A user registered via `POST /users` before the test and deleted via
+     * `DELETE /users/me` after it. Use it for any test that needs a
+     * successful login: the app rejects simultaneous logins to one account
+     * (only one of N parallel `POST /users/login` calls returns 200), so
+     * parallel tests must not share the APP_EMAIL account.
      */
-    createdResource: ResourceResponse;
+    registeredUser: RegisteredUser;
 };
 
 // ==================== Fixtures ====================
 
 export const test = base.extend<HelperFixtures>({
     /**
-     * Example helper fixture: creates a resource before the test, cleans up after.
-     *
-     * Replace the API endpoints, payload, and types with your actual application's API.
-     * Use Zod schemas from `fixtures/api/schemas/` for type-safe response parsing.
+     * Registers a fresh user before the test and deletes it afterwards.
+     * Teardown logs in again for a fresh token: a UI logout during the test
+     * also revokes the token returned at registration.
      *
      * @param {APIRequestContext} request - Playwright request context (injected automatically).
      * @param {function} use - Playwright fixture lifecycle callback.
      */
-    createdResource: async ({ request }, use) => {
+    registeredUser: async ({ request }, use) => {
         // ── SETUP: Runs before the test ──────────────────────────────
-        const { body } = await apiRequest({
+        const newUser = generateNewUser();
+        const { status, body } = await apiRequest({
             request,
             method: 'POST',
-            url: '/api/resources',
+            url: ApiEndpoints.REGISTER,
             baseUrl: process.env.API_URL,
-            headers: process.env.ACCESS_TOKEN,
-            body: { name: `test-resource-${Date.now()}` },
+            body: newUser,
         });
-
-        const resource = body as ResourceResponse;
+        expect(status).toBe(201);
+        expect(UserResponseSchema.parse(body)).toBeTruthy();
 
         // ── YIELD: Passes data to the test ───────────────────────────
-        await use(resource);
+        await use({ email: newUser.email, password: newUser.password });
 
         // ── TEARDOWN: Runs after the test (even on failure) ──────────
-        await apiRequest({
+        const login = await apiRequest({
+            request,
+            method: 'POST',
+            url: ApiEndpoints.LOGIN,
+            baseUrl: process.env.API_URL,
+            body: { email: newUser.email, password: newUser.password },
+        });
+        expect(login.status).toBe(200);
+        const { token } = UserResponseSchema.parse(login.body);
+
+        const deleted = await apiRequest({
             request,
             method: 'DELETE',
-            url: `/api/resources/${resource.id}`,
+            url: ApiEndpoints.CURRENT_USER,
             baseUrl: process.env.API_URL,
-            headers: process.env.ACCESS_TOKEN,
+            headers: token,
         });
+        expect(deleted.status).toBe(200);
     },
 });

@@ -3,10 +3,6 @@ import {
     UserResponse,
     UserResponseSchema,
 } from '../../../fixtures/api/schemas/app/userSchema';
-import {
-    UnauthorizedResponse,
-    UnauthorizedResponseSchema,
-} from '../../../fixtures/api/schemas/util/errorResponseSchema';
 import { expect, test } from '../../../fixtures/pom/test-options';
 import { INVALID_LOGIN_ATTEMPTS } from '../../../test-data/static/app/invalidCredentials';
 
@@ -14,14 +10,14 @@ test.describe('api/login', () => {
     test(
         'should return 200 and user data for valid credentials',
         { tag: '@api' },
-        async ({ apiRequest }) => {
+        async ({ apiRequest, registeredUser }) => {
             const { status, body } = await apiRequest<UserResponse>({
                 method: 'POST',
                 url: ApiEndpoints.LOGIN,
                 baseUrl: process.env.API_URL,
                 body: {
-                    email: process.env.APP_EMAIL,
-                    password: process.env.APP_PASSWORD,
+                    email: registeredUser.email,
+                    password: registeredUser.password,
                 },
             });
 
@@ -30,22 +26,22 @@ test.describe('api/login', () => {
         }
     );
 
+    // The API docs show no 401 example; captured live, the 401 response has
+    // an empty body, so there is no error schema to validate against.
     for (const { description, email, password } of INVALID_LOGIN_ATTEMPTS) {
         test(
             `should return 401 for invalid credentials - ${description} - email: ${email} - password: ${password}`,
             { tag: '@api' },
             async ({ apiRequest }) => {
-                const { status, body } = await apiRequest<UnauthorizedResponse>(
-                    {
-                        method: 'POST',
-                        url: ApiEndpoints.LOGIN,
-                        baseUrl: process.env.API_URL,
-                        body: { email, password },
-                    }
-                );
+                const { status, body } = await apiRequest<null>({
+                    method: 'POST',
+                    url: ApiEndpoints.LOGIN,
+                    baseUrl: process.env.API_URL,
+                    body: { email, password },
+                });
 
                 expect(status).toBe(401);
-                expect(UnauthorizedResponseSchema.parse(body)).toBeTruthy();
+                expect(body).toBeNull();
             }
         );
     }

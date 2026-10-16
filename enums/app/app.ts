@@ -10,17 +10,16 @@
  * ```
  */
 
-/** Common UI messages — every value verified against the live demo app */
+/** Common UI messages — every value verified against the live Contact List app */
 export enum Messages {
-    LOGIN_ERROR = 'Invalid email or password',
-    EMAIL_REQUIRED = 'Email is required',
-    PASSWORD_REQUIRED = 'Password is required',
-    EMAIL_FORMAT_INVALID = 'Email format is invalid',
+    LOGIN_ERROR = 'Incorrect username or password',
 }
 
 /** UI route paths */
 export enum AppRoutes {
-    LOGIN = '/auth/login',
+    LOGIN = '/',
+    CONTACT_LIST = '/contactList',
+    ADD_USER = '/addUser',
 }
 
 /** API endpoint paths */
@@ -28,7 +27,8 @@ export enum ApiEndpoints {
     LOGIN = '/users/login',
     LOGOUT = '/users/logout',
     CURRENT_USER = '/users/me',
-    REGISTER = '/users/register',
+    REGISTER = '/users',
+    CONTACTS = '/contacts',
 }
 
 /** Storage state file paths */

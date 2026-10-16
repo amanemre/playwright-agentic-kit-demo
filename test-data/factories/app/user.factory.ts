@@ -1,5 +1,7 @@
 import { faker } from '@faker-js/faker';
 import {
+    AddUserRequest,
+    AddUserRequestSchema,
     UserResponse,
     UserResponseSchema,
 } from '../../../fixtures/api/schemas/app/userSchema';
@@ -26,9 +28,14 @@ export const generateUser = (
     overrides?: Partial<UserResponse>
 ): UserResponse => {
     const defaultUser: UserResponse = {
-        access_token: faker.string.alphanumeric(64),
-        token_type: 'bearer',
-        expires_in: faker.number.int({ min: 60, max: 3600 }),
+        user: {
+            _id: faker.database.mongodbObjectId(),
+            firstName: faker.person.firstName(),
+            lastName: faker.person.lastName(),
+            email: faker.internet.email(),
+            __v: faker.number.int({ min: 0, max: 100 }),
+        },
+        token: faker.string.alphanumeric(64),
     };
 
     const mergedUser = { ...defaultUser, ...overrides };
@@ -67,4 +74,32 @@ export const generateLoginCredentials = (
                 pattern: /[A-Za-z0-9!@#$%]/,
             }),
     };
+};
+
+/**
+ * Generates a payload for `POST /users` (Add User).
+ * The email's local part is a UUID so parallel workers never collide on
+ * the app's unique-email constraint.
+ *
+ * @param {Partial<AddUserRequest>} overrides - Optional fields to override.
+ * @returns {AddUserRequest} A valid Add User payload.
+ *
+ * @example
+ * const newUser = generateNewUser();
+ */
+export const generateNewUser = (
+    overrides?: Partial<AddUserRequest>
+): AddUserRequest => {
+    const defaultUser: AddUserRequest = {
+        firstName: faker.person.firstName(),
+        lastName: faker.person.lastName(),
+        email: `${faker.string.uuid()}@example.com`,
+        password: faker.internet.password({
+            length: 12,
+            memorable: false,
+            pattern: /[A-Za-z0-9!@#$%]/,
+        }),
+    };
+
+    return AddUserRequestSchema.parse({ ...defaultUser, ...overrides });
 };

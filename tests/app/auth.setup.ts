@@ -16,6 +16,10 @@ import {
 } from '../../helpers/app/createStorageState';
 
 test.describe('auth setup', () => {
+    // Both steps log in as APP_EMAIL, and the app rejects simultaneous logins
+    // to one account — run them one after the other.
+    test.describe.configure({ mode: 'serial' });
+
     test('setup authentication - API token', async ({ apiRequest }) => {
         await setUserAccessToken(apiRequest);
         expect(process.env['ACCESS_TOKEN']).toBeDefined();

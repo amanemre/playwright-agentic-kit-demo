@@ -1,13 +1,16 @@
 import { test as base } from '@playwright/test';
-import { AppPage } from '../../pages/app/app.page';
+import { ContactListPage } from '../../pages/app/contact-list.page';
+import { LoginPage } from '../../pages/app/login.page';
 
 /**
  * Framework fixtures for page objects.
  * Add new page object types here as you create them.
  */
 export type FrameworkFixtures = {
-    /** Main application page object */
-    appPage: AppPage;
+    /** Login page (the app's root route) */
+    loginPage: LoginPage;
+    /** Contact list page shown after login */
+    contactListPage: ContactListPage;
     resetStorageState: () => Promise<void>;
 };
 
@@ -19,15 +22,19 @@ export type FrameworkFixtures = {
  * ```ts
  * import { test, expect } from '../fixtures/pom/test-options';
  *
- * test('example test', async ({ appPage }) => {
- *   await appPage.openHomePage();
- *   await expect(appPage.appTitle).toBeVisible();
+ * test('example test', async ({ loginPage }) => {
+ *   await loginPage.open();
+ *   await expect(loginPage.emailInput).toBeVisible();
  * });
  * ```
  */
 export const test = base.extend<FrameworkFixtures>({
-    appPage: async ({ page }, use) => {
-        await use(new AppPage(page));
+    loginPage: async ({ page }, use) => {
+        await use(new LoginPage(page));
+    },
+
+    contactListPage: async ({ page }, use) => {
+        await use(new ContactListPage(page));
     },
 
     resetStorageState: async ({ context }, use) => {
