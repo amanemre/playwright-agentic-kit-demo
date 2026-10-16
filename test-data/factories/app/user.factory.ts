@@ -18,10 +18,13 @@ export const generateUser = (
     return CreateUserRequestSchema.parse({
         firstName,
         lastName,
-        email: faker.internet.exampleEmail({
-            firstName,
-            lastName: `${lastName}${faker.string.numeric(8)}`,
-        }),
+        // lower case, as the API stores it, so responses echo it unchanged
+        email: faker.internet
+            .exampleEmail({
+                firstName,
+                lastName: `${lastName}${faker.string.numeric(8)}`,
+            })
+            .toLowerCase(),
         // lower-case letters only, so a capitalised copy is always a different password
         password: faker.internet.password({ length: 12, pattern: /[a-z]/ }),
         ...overrides,
