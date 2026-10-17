@@ -130,8 +130,6 @@ standingApprovals: []
 openQuestions:
     - question: Which ticket management tool will the project use? Record it in `tracker` once chosen.
       blocks: filing the two confirmed defects (LAPI-3.3 email case, LAPI-4.1); ticket IDs in branch names
-    - question: Keep or remove the preset's example (pages/app/example.page.ts, tests/app/functional/example.spec.ts, test-plans/app/example.md)? The example plan also fails the Prettier check.
-      blocks: nothing — it runs and passes
 ---
 
 # Project profile — playwright-agentic-kit-demo

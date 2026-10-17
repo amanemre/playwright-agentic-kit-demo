@@ -1,25 +1,19 @@
 import { Page } from '@playwright/test';
 import { AddUserPage } from './app/add-user.page';
 import { ContactListPage } from './app/contact-list.page';
-import { ExamplePage } from './app/example.page';
 import { LoginPage } from './app/login.page';
 
 /**
  * Every page object of contact-list-app, created on first access and reached
- * through the `pageManager` fixture: `pageManager.examplePage.open()`.
+ * through the `pageManager` fixture: `pageManager.loginPage.open()`.
  * Add each new page object as a getter here — never `new` it in a test.
  */
 export class PageManager {
-    private examplePageInstance?: ExamplePage;
     private loginPageInstance?: LoginPage;
     private contactListPageInstance?: ContactListPage;
     private addUserPageInstance?: AddUserPage;
 
     constructor(private readonly page: Page) {}
-
-    get examplePage(): ExamplePage {
-        return (this.examplePageInstance ??= new ExamplePage(this.page));
-    }
 
     /** / — the login form */
     get loginPage(): LoginPage {
