@@ -109,7 +109,7 @@ ci:
 tracker:
     system: linear # decision — user, 2026-10-17
     access: mcp # the Linear MCP server in .mcp.json (https://mcp.linear.app/mcp), connected by the user
-    project: Agentic Training # tickets carry the team key AGE
+    project: AGE # the key of the Linear team "Agentic Training" — a team, not a Linear project (the team has no projects)
     idPattern: 'AGE-\d+'
     defectType: Bug # the "Bug" label
 
@@ -168,6 +168,10 @@ Plans: `test-plans/app/login.md` (UI login), `test-plans/app/login-api.md` (`POS
 - Playwright browsers: run `npx playwright install chromium` after a Playwright upgrade.
 - CI (`.github/workflows/tests.yml`): `APP_URL` and `API_URL` are set in the workflow (public URLs); `APP_EMAIL` / `APP_PASSWORD` come from the repository's secrets, which the user adds. No env file is written in CI — the variables come from the job's environment.
 - `playwright-cli` warns that `.claude/skills/playwright-cli` does not match the tool version (`playwright-cli install --skills` updates it).
+
+## Tracker
+
+Linear, through the MCP server in `.mcp.json`. Tickets live in the **team** "Agentic Training" (key `AGE`, IDs `AGE-<n>`); the team has no Linear projects, so find and file tickets by team, never by project. Defects are filed in that team with the `Bug` label, only after the user confirms each one.
 
 ## Known defects
 
