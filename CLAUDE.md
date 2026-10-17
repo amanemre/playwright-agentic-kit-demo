@@ -18,11 +18,11 @@ Source: `PROJECT-PROFILE.md` (profile schema 1, kit 0.1.0). Read it — or the `
 - **Commands** (verified references; run only after checking their target): discover `npx playwright test --list` · typecheck `npm run typecheck` · lint `npm run lint` · test `npm test` · summary `node scripts/run-summary.mjs --report reports/results.json`
 - **Exploration:** `playwright-cli` · fallbacks: none approved
 - **CI:** github-actions · pull requests run smoke+changed · 1 shard(s) · the pipeline result follows the run summary (new failures and unstable tests fail it; known defects do not) (the `ci` skill)
-- **Tracker:** none — tickets and defects go through the user
+- **Tracker:** linear (mcp) · project `Agentic Training` · IDs `AGE-\d+` · defects as `Bug` (the `tracker` skill)
 - **Delivery:** github · base `main` · CLI gh · branches `{type}/{ticket}-{short-name}` · commits conventional (the `pull-requests` skill)
 - **Conventions:** report style readable-steps (`helpers/util/softChecks.ts`) · tags `@smoke`, `@sanity`, `@regression`, `@e2e`, `@api`, `@destructive`, 1 per test · validation zod (strict), `expect(Schema.parse(body)).toBeTruthy()` · static data ts-as-const · factories faker · GIVEN state via api · known defects stay failing tests
 - **Standing approvals:** none — every outward step needs the user's go-ahead
-- **Open questions:** 1 — listed in the profile
+- **Open questions:** none
 
 <!-- profile:end -->
 

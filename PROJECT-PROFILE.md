@@ -107,14 +107,17 @@ ci:
     serialTag: '@destructive'
 
 tracker:
-    system: none # decision — user, 2026-10-17: no tracker yet; one will be chosen later
-    access: manual # tickets and defect reports go through the user
+    system: linear # decision — user, 2026-10-17
+    access: mcp # the Linear MCP server in .mcp.json (https://mcp.linear.app/mcp), connected by the user
+    project: Agentic Training # tickets carry the team key AGE
+    idPattern: 'AGE-\d+'
+    defectType: Bug # the "Bug" label
 
 delivery:
     host: github # origin → github.com/amanemre/playwright-agentic-kit-demo
     baseBranch: main # remote HEAD → main
     cli: gh
-    branchPattern: '{type}/{ticket}-{short-name}' # decision — user, 2026-10-17: applies once a tracker is chosen; earlier branches keep their names
+    branchPattern: '{type}/{ticket}-{short-name}' # decision — user, 2026-10-17: new branches use it with Linear IDs (e.g. test/AGE-1-add-contact); earlier branches keep their names
     commitStyle: conventional # every commit subject: chore: / test:
 
 overrides: []
@@ -127,9 +130,7 @@ termExceptions:
 
 standingApprovals: []
 
-openQuestions:
-    - question: Which ticket management tool will the project use? Record it in `tracker` once chosen.
-      blocks: filing the two confirmed defects (LAPI-3.3 email case, LAPI-4.1); ticket IDs in branch names
+openQuestions: []
 ---
 
 # Project profile — playwright-agentic-kit-demo
@@ -175,7 +176,7 @@ Plans: `test-plans/app/login.md` (UI login), `test-plans/app/login-api.md` (`POS
 | `POST /users/login` with `email` as an array holding the account's email returns 200 and a token | LAPI-3.3 (`email`) | `test-plans/app/login-api.md` |
 | `PUT /users/login` hangs ~30 s and returns 503 instead of 405                                    | LAPI-4.1           | `test-plans/app/login-api.md` |
 
-Both were confirmed by the user on 2026-10-16 and are not filed yet — there is no tracker.
+Both were confirmed by the user on 2026-10-16 and are not filed yet in Linear.
 
 ## Worked examples
 
