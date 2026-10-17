@@ -13,7 +13,7 @@
 
 - `POST /users/login` takes a JSON body `{ email, password }` and answers 200 with `{ user: { _id, firstName, lastName, email, __v }, token }` — requirement — Postman collection, "Log In User" request and its saved 200 response.
 - **No error response is documented** — no status code, no body. Everything below about rejected requests is observed, not documented; the missing documentation is flagged to the team.
-- The API stores and returns emails in lower case (an account created with `Dayna.Reichel…@example.net` is returned as `dayna.reichel…@example.net`); the test data therefore uses lower-case emails — observation, 2026-10-16, production, first run of LOGIN-API-1.1.
+- The API stores and returns emails in lower case (an account created with `Dayna.Reichel…@example.net` is returned as `dayna.reichel…@example.net`); the test data therefore uses lower-case emails — observation, 2026-10-16, production, first run of LAPI-1.1.
 - The returned token authenticates `GET /users/me`, which returns the same user — observation, 2026-10-16, production, live requests (the Postman collection documents `GET /users/me` with a bearer token).
 - A wrong password, an unregistered email, an empty string, a missing field, a field of type number, boolean or null, an empty body `{}`, a form-encoded body, and MongoDB operator objects (`{ "$ne": null }`, `{ "$gt": "" }`, `{ "$regex": ".*" }`) in either field all answer **401 with an empty body** — observation, 2026-10-16, production, live requests.
 - An `email` sent as an **array** containing the account's email answers **200 and a token** — also when another address comes first (`["x@example.com", "<email>"]`). A `password` sent as an array answers 401 — observation, 2026-10-16, production, live requests.
@@ -97,7 +97,7 @@ R3 merges N/Y and N/N. Checksum: 1 + 1 + 2 = 4 = the full table's feasible rules
 
 #### 1.1 POST /users/login with a registered email and password returns 200 and a token for that user
 
-**ID:** LOGIN-API-1.1 · **Tag:** `@api` · **Priority:** high · **Purpose:** conformance · **Readiness:** ready
+**ID:** LAPI-1.1 · **Tag:** `@api` · **Priority:** high · **Purpose:** conformance · **Readiness:** ready
 
 **Source:** requirement — Postman collection, "Log In User" 200 response; oracle — `GET /users/me`, same collection
 
@@ -120,7 +120,7 @@ R3 merges N/Y and N/N. Checksum: 1 + 1 + 2 = 4 = the full table's feasible rules
 
 #### 2.1 POST /users/login with <partition> returns 401 and an empty body
 
-**ID:** LOGIN-API-2.1 · **Tag:** `@api` · **Priority:** high · **Purpose:** characterization · **Readiness:** ready
+**ID:** LAPI-2.1 · **Tag:** `@api` · **Priority:** high · **Purpose:** characterization · **Readiness:** ready
 
 **Source:** observation — 2026-10-16, production, live requests (401, empty body)
 
@@ -146,7 +146,7 @@ R3 merges N/Y and N/N. Checksum: 1 + 1 + 2 = 4 = the full table's feasible rules
 
 #### 3.1 POST /users/login with an empty body returns 401 and an empty body
 
-**ID:** LOGIN-API-3.1 · **Tag:** `@api` · **Priority:** medium · **Purpose:** characterization · **Readiness:** ready
+**ID:** LAPI-3.1 · **Tag:** `@api` · **Priority:** medium · **Purpose:** characterization · **Readiness:** ready
 
 **Source:** observation — 2026-10-16, production, live requests
 
@@ -162,7 +162,7 @@ R3 merges N/Y and N/N. Checksum: 1 + 1 + 2 = 4 = the full table's feasible rules
 
 #### 3.2 POST /users/login with "<field>" as <type> returns 401 and an empty body
 
-**ID:** LOGIN-API-3.2 · **Tag:** `@api` · **Priority:** high · **Purpose:** characterization · **Readiness:** ready
+**ID:** LAPI-3.2 · **Tag:** `@api` · **Priority:** high · **Purpose:** characterization · **Readiness:** ready
 
 **Source:** observation — 2026-10-16, production, live requests (401 for every case listed)
 
@@ -172,7 +172,18 @@ R3 merges N/Y and N/N. Checksum: 1 + 1 + 2 = 4 = the full table's feasible rules
 
 **Technique:** domain testing (type partitions), error guessing · **Covers:** one type partition per case, per field
 
-**Cases** (`field` × `type`): `email` and `password`, each as `123`, `true`, `null`, `undefined` (missing), and an operator object `{"$ne":null}` — 10 tests
+**Cases** (`field`, `type`):
+
+- `email` · `123`
+- `email` · `true`
+- `email` · `null`
+- `email` · `undefined`
+- `email` · `{"$ne":null}`
+- `password` · `123`
+- `password` · `true`
+- `password` · `null`
+- `password` · `undefined`
+- `password` · `{"$ne":null}`
 
 1. **GIVEN** a registered user
 2. **WHEN** POST /users/login is sent with `<field>` as `<type>` and the other field valid
@@ -181,7 +192,7 @@ R3 merges N/Y and N/N. Checksum: 1 + 1 + 2 = 4 = the full table's feasible rules
 
 #### 3.3 POST /users/login with "<field>" as an array holding the account's value returns 401 and an empty body
 
-**ID:** LOGIN-API-3.3 · **Tag:** `@api` · **Priority:** high · **Purpose:** conformance · **Readiness:** ready
+**ID:** LAPI-3.3 · **Tag:** `@api` · **Priority:** high · **Purpose:** conformance · **Readiness:** ready
 
 **Source:** decision — user, 2026-10-16, 401 like every other non-string type; observation — 2026-10-16, production, live requests (email → 200 and a token; password → 401)
 
@@ -191,7 +202,10 @@ R3 merges N/Y and N/N. Checksum: 1 + 1 + 2 = 4 = the full table's feasible rules
 
 **Technique:** error guessing · **Covers:** CL-1 array instead of a string
 
-**Cases** (`field`): `email`, `password`
+**Cases** (`field`):
+
+- `email`
+- `password`
 
 1. **GIVEN** a registered user
 2. **WHEN** POST /users/login is sent with `<field>` as an array holding the account's value
@@ -200,7 +214,7 @@ R3 merges N/Y and N/N. Checksum: 1 + 1 + 2 = 4 = the full table's feasible rules
 
 #### 3.4 POST /users/login with a form-encoded body returns 401 and an empty body
 
-**ID:** LOGIN-API-3.4 · **Tag:** `@api` · **Priority:** low · **Purpose:** characterization · **Readiness:** ready
+**ID:** LAPI-3.4 · **Tag:** `@api` · **Priority:** low · **Purpose:** characterization · **Readiness:** ready
 
 **Source:** observation — 2026-10-16, production, live requests
 
@@ -219,7 +233,7 @@ R3 merges N/Y and N/N. Checksum: 1 + 1 + 2 = 4 = the full table's feasible rules
 
 #### 4.1 PUT /users/login returns 405
 
-**ID:** LOGIN-API-4.1 · **Tag:** `@api` · **Priority:** medium · **Purpose:** conformance · **Readiness:** ready
+**ID:** LAPI-4.1 · **Tag:** `@api` · **Priority:** medium · **Purpose:** conformance · **Readiness:** ready
 
 **Source:** decision — user, 2026-10-16, RFC 9110 §15.5.6; observation — 2026-10-16, production, live requests (503 after ~30 s)
 
@@ -234,10 +248,10 @@ R3 merges N/Y and N/N. Checksum: 1 + 1 + 2 = 4 = the full table's feasible rules
 
 ## Why tests currently fail
 
-| Behaviour of the live app                                             | Failing lines                                            | Scenarios                    | Defect                                        |
-| --------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------- | --------------------------------------------- |
-| An `email` array holding the account's email logs in: 200 and a token | THEN HTTP status is 401 · AND the response body is empty | LOGIN-API-3.3 (`email` case) | not filed — confirmed by the user, 2026-10-16 |
-| `PUT /users/login` hangs ~30 s and ends with Heroku's 503 page        | THEN HTTP status is 405                                  | LOGIN-API-4.1                | not filed — confirmed by the user, 2026-10-16 |
+| Behaviour of the live app                                             | Failing lines                                            | Scenarios               | Defect                                        |
+| --------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------- | --------------------------------------------- |
+| An `email` array holding the account's email logs in: 200 and a token | THEN HTTP status is 401 · AND the response body is empty | LAPI-3.3 (`email` case) | not filed — confirmed by the user, 2026-10-16 |
+| `PUT /users/login` hangs ~30 s and ends with Heroku's 503 page        | THEN HTTP status is 405                                  | LAPI-4.1                | not filed — confirmed by the user, 2026-10-16 |
 
 ## Skipped tests
 

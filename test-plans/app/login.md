@@ -98,7 +98,7 @@ R3 merges N/Y and N/N: with an unregistered email the password cannot change the
 
 #### 1.1 a registered user logs in and sees their own contacts
 
-**ID:** LOGIN-1.1 · **Tag:** `@smoke` · **Priority:** high · **Purpose:** conformance · **Readiness:** ready
+**ID:** LOGIN-1.1 · **Tag:** `@smoke` · **Priority:** high · **Purpose:** characterization · **Readiness:** ready
 
 **Source:** observation — 2026-10-16, production, `login.js` redirect and `contactList.js` loading the user's contacts
 
@@ -114,7 +114,7 @@ R3 merges N/Y and N/N: with an unregistered email the password cannot change the
 
 #### 1.2 logging in with a pressed Enter key instead of the Submit button works
 
-**ID:** LOGIN-1.2 · **Tag:** `@regression` · **Priority:** low · **Purpose:** conformance · **Readiness:** ready
+**ID:** LOGIN-1.2 · **Tag:** `@regression` · **Priority:** low · **Purpose:** characterization · **Readiness:** ready
 
 **Source:** observation — 2026-10-16, production, `login.js` listens to the form's `submit` event
 
@@ -132,7 +132,7 @@ R3 merges N/Y and N/N: with an unregistered email the password cannot change the
 
 #### 2.1 logging in with <partition> is rejected
 
-**ID:** LOGIN-2.1 · **Tag:** `@regression` · **Priority:** high · **Purpose:** conformance · **Readiness:** ready
+**ID:** LOGIN-2.1 · **Tag:** `@regression` · **Priority:** high · **Purpose:** characterization · **Readiness:** ready
 
 **Source:** observation — 2026-10-16, production, `login.js` error branch and live requests (401 for each case)
 
@@ -158,7 +158,7 @@ R3 merges N/Y and N/N: with an unregistered email the password cannot change the
 
 #### 3.1 after logging out the user's contacts are no longer shown
 
-**ID:** LOGIN-3.1 · **Tag:** `@regression` · **Priority:** medium · **Purpose:** conformance · **Readiness:** ready
+**ID:** LOGIN-3.1 · **Tag:** `@regression` · **Priority:** medium · **Purpose:** characterization · **Readiness:** ready
 
 **Source:** observation — 2026-10-16, production, logout and `GET /contacts` → 401 with the old token
 
@@ -178,7 +178,7 @@ R3 merges N/Y and N/N: with an unregistered email the password cannot change the
 
 #### 4.1 the Sign up button opens the add user page
 
-**ID:** LOGIN-4.1 · **Tag:** `@regression` · **Priority:** low · **Purpose:** conformance · **Readiness:** ready
+**ID:** LOGIN-4.1 · **Tag:** `@regression` · **Priority:** low · **Purpose:** characterization · **Readiness:** ready
 
 **Source:** observation — 2026-10-16, production, the button's `onclick` and the `/addUser` snapshot
 

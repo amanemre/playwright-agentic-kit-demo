@@ -9,6 +9,27 @@ alwaysApply: true
 This file is always loaded and provides the high-level rules, workflow, and an index of detailed skill files. Detailed skills live in `.cursor/skills/` and should be read when working on related files.
 
 <!-- profile:start -->
+<!-- Generated from PROJECT-PROFILE.md by `npm run profile:sync` — edit the profile, not this block. -->
+
+## Project Profile (summary)
+
+Source: `PROJECT-PROFILE.md` (profile schema 1, kit 0.1.0). Read it — or the `project-profile` skill — for the full facts, API conventions and examples. Rules marked as preset defaults apply as overridden below; invariants always apply.
+
+- **Project:** playwright-agentic-kit-demo — Contact List App — a demo web app and JSON API for managing a user's contacts (https://thinking-tester-contact-list.herokuapp.com)
+- **Mode / preset:** scaffold · playwright-house-preset
+- **Capabilities:** UI yes · API yes · auth: JWT from POST /users or POST /users/login — a bearer token for the API, the same token as the `token` cookie for the UI · contract validation: zod
+- **Overrides of preset defaults:** none — every preset default applies
+- **Paths:** area `app` · tests `tests` · plans `test-plans/app` · testEntry `fixtures/fixtures.ts` · pageManager `pages/page-manager.ts` · pageObjects `pages/app` · fixtures `fixtures` · helperFixtures `fixtures/helper/helper-fixture.ts` · schemas `fixtures/api/schemas/app` · enums `enums/app` · helpers `helpers/util` · factories `test-data/factories/app` · staticData `test-data/static/app` · config `config`
+- **Env var names:** URLs `APP_URL`, `API_URL` · credentials `APP_EMAIL`, `APP_PASSWORD` · values in `env/.env.<ENVIRONMENT>` (default `dev`), chosen by `ENVIRONMENT`
+- **Commands** (verified references; run only after checking their target): discover `npx playwright test --list` · typecheck `npm run typecheck` · lint `npm run lint` · test `npm test` · summary `node scripts/run-summary.mjs --report reports/results.json`
+- **Exploration:** `playwright-cli` · fallbacks: none approved
+- **CI:** github-actions · pull requests run smoke+changed · 1 shard(s) · the pipeline result follows the run summary (new failures and unstable tests fail it; known defects do not) (the `ci` skill)
+- **Tracker:** none — tickets and defects go through the user
+- **Delivery:** github · base `main` · CLI gh · branches `{type}/{ticket}-{short-name}` · commits conventional (the `pull-requests` skill)
+- **Conventions:** report style readable-steps (`helpers/util/softChecks.ts`) · tags `@smoke`, `@sanity`, `@regression`, `@e2e`, `@api`, `@destructive`, 1 per test · validation zod (strict), `expect(Schema.parse(body)).toBeTruthy()` · static data ts-as-const · factories faker · GIVEN state via api · known defects stay failing tests
+- **Standing approvals:** none — every outward step needs the user's go-ahead
+- **Open questions:** 2 — listed in the profile
+
 <!-- profile:end -->
 
 ---
