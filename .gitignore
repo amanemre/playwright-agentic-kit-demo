@@ -3,3 +3,4 @@ reports/
 .auth/
 env/.env.*
 !env/.env.example
+.playwright-cli/
