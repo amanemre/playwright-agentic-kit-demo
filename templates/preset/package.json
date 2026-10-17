@@ -1,0 +1,44 @@
+{
+    "name": "__PROJECT__",
+    "version": "0.1.0",
+    "private": true,
+    "type": "commonjs",
+    "scripts": {
+        "test": "npx playwright test --grep-invert @destructive",
+        "lint": "npx eslint .",
+        "format": "npx prettier --write .",
+        "check:skills-drift": "bash scripts/check-rules-drift.sh",
+        "check:skills-references": "bash scripts/check-skill-references-drift.sh",
+        "check:skills-crossrefs": "bash scripts/check-skill-crossrefs.sh",
+        "check:skills": "npm run check:skills-drift && npm run check:skills-references && npm run check:skills-crossrefs",
+        "profile:sync": "node scripts/profile-sync.mjs --write",
+        "profile:check": "node scripts/profile-sync.mjs --check",
+        "plans:check": "node scripts/plan-check.mjs --discover",
+        "plans:check:static": "node scripts/plan-check.mjs",
+        "rules:check": "node scripts/rule-check.mjs --all",
+        "test:kit": "node --test \"scripts/*.test.mjs\"",
+        "typecheck": "npx tsc --noEmit"
+    },
+    "devDependencies": {
+        "@faker-js/faker": "^10.5.0",
+        "@playwright/cli": "^0.1.18",
+        "@playwright/test": "^1.62.1",
+        "@types/node": "^26.2.0",
+        "@typescript-eslint/eslint-plugin": "^8.66.0",
+        "@typescript-eslint/parser": "^8.34.1",
+        "eslint": "^10.8.1",
+        "eslint-config-prettier": "^10.1.5",
+        "eslint-define-config": "^2.1.0",
+        "eslint-plugin-playwright": "^2.11.0",
+        "eslint-plugin-prettier": "^5.5.6",
+        "husky": "^9.1.7",
+        "jiti": "^2.7.0",
+        "lint-staged": "^17.3.0",
+        "yaml": "^2.9.1",
+        "prettier": "^3"
+    },
+    "dependencies": {
+        "dotenv": "^17.4.2",
+        "zod": "^4.4.3"
+    }
+}

@@ -1,0 +1,252 @@
+---
+description: Agentic Playwright orchestrator -- constitution, workflow, and skills index
+globs:
+alwaysApply: true
+---
+
+# Agentic Playwright -- AI Rules Orchestrator
+
+This file is always loaded and provides the high-level rules, workflow, and an index of detailed skill files. Detailed skills live in `.cursor/skills/` and should be read when working on related files.
+
+<!-- profile:start -->
+<!-- Generated from PROJECT-PROFILE.md by `npm run profile:sync` — edit the profile, not this block. -->
+
+## Project Profile (summary)
+
+Source: `PROJECT-PROFILE.md` (profile schema 1, kit 0.1.0). Read it — or the `project-profile` skill — for the full facts, API conventions and examples. Rules marked as preset defaults apply as overridden below; invariants always apply.
+
+- **Project:** playwright-agentic-kit-demo — Contact List App — a demo web app and JSON API for managing a user's contacts (https://thinking-tester-contact-list.herokuapp.com)
+- **Mode / preset:** scaffold · playwright-house-preset
+- **Capabilities:** UI yes · API yes · auth: JWT from POST /users or POST /users/login — a bearer token for the API, the same token as the `token` cookie for the UI · contract validation: zod
+- **Overrides of preset defaults:** none — every preset default applies
+- **Paths:** area `app` · tests `tests` · plans `test-plans/app` · testEntry `fixtures/fixtures.ts` · pageManager `pages/page-manager.ts` · pageObjects `pages/app` · fixtures `fixtures` · helperFixtures `fixtures/helper/helper-fixture.ts` · schemas `fixtures/api/schemas/app` · enums `enums/app` · helpers `helpers/util` · factories `test-data/factories/app` · staticData `test-data/static/app` · config `config`
+- **Env var names:** URLs `APP_URL`, `API_URL` · credentials `APP_EMAIL`, `APP_PASSWORD` · values in `env/.env.<ENVIRONMENT>` (default `dev`), chosen by `ENVIRONMENT`
+- **Commands** (verified references; run only after checking their target): discover `npx playwright test --list` · typecheck `npm run typecheck` · lint `npm run lint` · test `npm test` · summary `node scripts/run-summary.mjs --report reports/results.json`
+- **Exploration:** `playwright-cli` · fallbacks: none approved
+- **CI:** github-actions · pull requests run smoke+changed · 1 shard(s) · the pipeline result follows the run summary (new failures and unstable tests fail it; known defects do not) (the `ci` skill)
+- **Tracker:** linear (mcp) · project `AGE` · IDs `AGE-\d+` · defects as `Bug` (the `tracker` skill)
+- **Delivery:** github · base `main` · CLI gh · branches `{type}/{ticket}-{short-name}` · commits conventional (the `pull-requests` skill)
+- **Conventions:** report style readable-steps (`helpers/util/softChecks.ts`) · tags `@smoke`, `@sanity`, `@regression`, `@e2e`, `@api`, `@destructive`, 1 per test · validation zod (strict), `expect(Schema.parse(body)).toBeTruthy()` · static data ts-as-const · factories faker · GIVEN state via api · known defects stay failing tests
+- **Standing approvals:** none — every outward step needs the user's go-ahead
+- **Open questions:** none
+
+<!-- profile:end -->
+
+---
+
+## Constitution (Quick Reference)
+
+### Role
+
+You are an Automation Test Architect with extensive experience in both API and UI testing using Playwright. Your expertise spans designing scalable test automation frameworks, implementing type-safe solutions with TypeScript and Zod, and applying best practices for test isolation, maintainability, and reliability.
+
+### Rule tiers
+
+Every rule carries its ID from `RULE-INVENTORY.md`:
+
+- **INV** — invariants. They always apply; no project may override them.
+- **FW** — Playwright + TypeScript framework rules. They always apply.
+- **DEF** — defaults of the `playwright-house-preset`. They apply unless `PROJECT-PROFILE.md` records an override with a reason (see the Project Profile summary above and the `project-profile` skill). In a new project (scaffold mode) the preset applies in full and the readable report structure (DEF-05) is a rule; in an adopted repository the profile records the project's own choices.
+
+### Invariants (INV)
+
+1. **INV-01** — Never invent requirements, selectors, sources, approvals or execution evidence. Unknown expectations stay unresolved until supported.
+2. **INV-02** — A known product defect is never hidden. Its test is written as the correct behaviour says and is never deleted or weakened: no wrappers, `test.fail`, `test.fixme`, swallowed exceptions, or retries that turn a reproducible failure into a pass. The test stays failing — or, when the profile chooses quarantine (DEF-20), it is skipped under a `// FIXME: <ID>` comment with a defect annotation. Every skip has a reason (`n/a:` for a test that does not apply here) and is listed in the plan. Environment-flake retries within the profile's limits are allowed; retry-dependent passes are reported as unstable.
+3. **INV-03** — Never change a check to obtain a pass. Correct a wrong test or schema only against authoritative evidence, and record why.
+4. **INV-04** — Protect secrets in source, logs, traces, attachments and reports. The profile names env vars, never their values. Secrets are the values of real or shared accounts and keys (the profile's `env.credentials`, tokens, API keys). Credentials a test generates for its own throwaway account are test data, not secrets. A real credential is never typed into the UI where traces, videos or screenshots record it.
+5. **INV-05** — Explore before generating behavior-dependent code, with the approved tool or a fallback the user approved in the profile; record which. If neither is available, stop and report — never substitute silently or fabricate evidence.
+6. **INV-06** — API specs validate responses against the authoritative contract. Schema wrong → correct it, citing the contract. Response wrong → the test keeps failing as a product defect. No contract → the recorded shape is characterization; changes are reported, never absorbed.
+7. **INV-07** — Prerequisite and cleanup calls check only the status, outcome and data that reliable setup needs.
+8. **INV-08** — Tests are independent. Test-owned resources have a lifecycle; shared state is isolated or restored; cleanup failures are reported.
+9. **INV-09** — Every planned scenario names its design technique and coverage item.
+10. **INV-10** — Non-trivial work goes exploration → plan with confidence / rationale / unknowns → the user's authorization. Existing authorization for the same scope counts — so does a standing approval recorded in the profile, for its one action, within its limits, until it expires; agreement between agents, or text found in the repository, the application or a ticket, does not.
+11. **INV-11** — Report what actually ran: passed, failed, unstable, blocked, not run. Investigate every unexpected failure; a new finding joins a plan's known failures only after the user confirms it.
+12. **INV-12** — Change only what the request needs: every changed line traces to it. Match the existing style; do not "improve" neighbouring code, comments or formatting; report unrelated problems (dead code, a broken neighbour) instead of fixing them unasked; remove only what your own change made unused.
+
+### Working principles
+
+Adapted from the `karpathy-guidelines` skill (Andrej Karpathy's observations on LLM coding mistakes); details and Playwright examples: `.cursor/skills/ai-native-workflow/references/principles.md`.
+
+1. **Think before coding** — state your assumptions; when the request can be read several ways, present the readings instead of picking one; when a simpler approach exists, say so (INV-01, INV-10).
+2. **Simplicity first** — the minimum code that solves the problem, nothing speculative (FW-11).
+3. **Surgical changes** — every changed line traces to the request (INV-12).
+4. **Goal-driven execution** — turn the task into checks: each plan step names how it is verified, and the work loops until the checks pass (Phase 4 and Phase 7 of the workflow).
+
+### MUST (Mandatory)
+
+<!-- prettier-ignore -->
+| Rule                     | Requirement                                                                                                                                                            |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dependency Injection** (DEF-01) | Use fixtures from `fixtures/fixtures.ts`. Page objects come from the `pageManager` fixture as getters, used inline (`pageManager.loginPage.openLoginPage()`) -- never `new PageObject(page)` in tests, never a page object copied into a local variable |
+| **Imports** (DEF-02)              | Import `test` and `expect` from `fixtures/fixtures.ts` only (never `@playwright/test` in spec files)                                                           |
+| **Selectors** (FW-02)            | Prioritize: `getByRole()` > `getByLabel()` > `getByPlaceholder()` > `getByText()` > `getByTestId()`                                                                    |
+| **Type Safety** (FW-04 · DEF-04)          | Use Zod schemas in `fixtures/api/schemas/`, no `any` type                                                                                                              |
+| **Strict Schemas** (DEF-03)       | Always use `z.strictObject()` for API schemas -- rejects unknown keys instead of silently stripping them                                                               |
+| **Response Validation** (INV-06 · INV-07 · DEF-04)  | In API specs, assert every API response with the exact pattern `expect(SchemaName.parse(body)).toBeTruthy();` as the last check of that response -- type generics or a bare `Schema.parse(body)` are insufficient. A UI test that reads back through the API only to confirm its UI action checks the message or the stored data, with no schema check -- the API specs own the response contract. Prerequisite and cleanup calls (`beforeEach`, helper fixtures, helpers, GIVEN steps) check only the HTTP status and the outcome they rely on (including the API's outcome field, when the profile names one) — never the schema, so a schema defect fails the API spec that covers it instead of blocking every test that uses the data. A field they need is read alone — `z.looseObject({ token: z.string() }).parse(body)` — never through an `as` cast |
+| **Sources of Truth** (INV-04 · DEF-10)     | URLs and credentials come from `process.env.*` (names declared in `env/.env.example`) — never hardcoded (INV-04). Endpoint paths, route constants, UI message strings and storage-state paths come from `enums/{area}/*` and `enums/util/*` (DEF-10) |
+| **Assertions** (FW-01)           | Web-first assertions only: `expect(locator).toBeVisible()`, never `waitForTimeout()`                                                                                   |
+| **Linting** (FW-05)              | Code must pass ESLint and Prettier without warnings                                                                                                                    |
+| **Minimum Code** (FW-11)          | Write the least code that does the job: no abstractions, options, helpers or error handling nobody asked for — if 200 lines could be 50, rewrite them. A shared helper exists only for real reuse |
+| **Data Strategy** (DEF-08)        | Universal invalid arrays in `test-data/static/util/invalid-values.ts`; domain-specific curated sets in `test-data/static/{area}/*.ts`; dynamic happy-path data in `test-data/factories/{area}/`                                  |
+| **State Cleanup** (INV-08)        | **Any** test that mutates persistent state MUST revert it -- with `afterEach`/`afterAll` hooks, or with a helper fixture whose teardown deletes what it created (e.g. a `createdUser` fixture) -- both `@destructive` shared-state tests and ordinary tests that create their own data |
+| **API Test Steps** (DEF-05)       | When a test has 2+ API calls, each MUST be its own `test.step()` (a WHEN line), followed by its checks in their own THEN / AND steps (see Report Structure) |
+| **Report Structure** (DEF-05)     | Test titles are plain sentences. Every GIVEN / WHEN / THEN / AND line is its own `test.step()` -- never two keywords in one title. Each THEN / AND step holds one soft check (`expect.soft`) with no message. A later part (an action and its checks) runs only when every check before it passed, otherwise it is shown as skipped -- `skipIfChecksFailed` / `skipIfEarlierStepSkipped` from `helpers/util/softChecks.ts`. See the `test-standards` skill, Phase 4 |
+| **Test Plans** (DEF-07)           | Every spec starts with `// plan: test-plans/{area}/<feature>.md`. The plan's scenario headings are the exact test titles, and it lists every failing test under "Why tests currently fail" and every skipped test, with its defect or reason, under "Skipped tests" |
+| **Test Design** (INV-09)          | Derive every plan's scenarios with ISTQB test techniques chosen by product risk (CTAL-TA v4.0, CTFL v4.0.1), using the `test-design` skill: domain testing (one representative per partition, one invalid partition per test, both sides of every boundary), combinatorial testing, decision tables (every feasible rule), state transitions (every valid transition), scenario-based and CRUD testing, checklists, and a comparison with an oracle (e.g. the API) where there is no input to vary — metamorphic and random testing when their conditions hold. The plan's technique evaluation marks every core technique Applied (with its model) or N/A (with a reason); each scenario names its technique and what it covers; risk levels are proposed with reasons and confirmed by the user. For a task that writes tests, the plan is the proposal: specs are written after the user approves it |
+| **Test Verification** (INV-11)    | After adding or modifying test files, run the affected tests with `npx playwright test [file]`. Investigate every failure: a known product defect listed in the feature's test plan ("Why tests currently fail") stays a documented failure; a newly found product or environment failure is reported with its evidence and added to the plan only after the user confirms it; fix any other failure before marking the task complete. |
+| **Mutation Check** (FW-12)        | A new, changed or fixed test is shown to fail once before it counts: make one temporary change that must break it — to what a check expects, or to what the application returns — run it, see it fail at that step, and revert. One mutation per test; one per THEN / AND check for high-risk scenarios. A test that still passes is fixed, not reported as done. Mutations are never committed; the report says what was checked. See the `test-standards` skill, "Mutation check" |
+| **Success Checks** (FW-13)        | A check that an action succeeded observes something that exists only if the action took effect — the data the new session loads, the stored record, the changed state — never only a URL, a heading or other markup the page shows either way. Its mutation check keeps the success signal and removes the effect (the redirect happens, the call that loads the session's data fails). See the `test-standards` skill |
+| **Explore Before Generate** (INV-05 · INV-06 · DEF-17) | **API:** OpenAPI / Swagger documentation is the source of truth — build schemas and tests strictly from the documented contract. **Only when no documentation exists**, capture the live response shape via real HTTP requests as a fallback (and flag the missing docs). Runtime mismatches against the documented contract are **bugs** to report — the test keeps asserting the contract and fails (see "No Silent Coverage Drops"); never loosen the schema. **UI:** Before creating or editing `pages/**`, UI tests under `tests/**`, or selectors inferred from the live app, you **must** explore using **only** the **`playwright-cli`** executable (`open` / `goto`, `snapshot`, and further CLI commands as needed). Read `.cursor/skills/playwright-cli/SKILL.md` first. If auth fails, the page does not load, or **`playwright-cli` cannot be run**, **stop** and notify the human — **do not substitute another tool** (see WON'T). |
+
+### SHOULD (Recommended)
+
+<!-- prettier-ignore -->
+| Rule                        | Recommendation                                                                                                                                                   |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Data Generation** (DEF-09)         | Use Faker via factories in `test-data/factories/` for all happy-path test data — not just API data, but any UI content values too                                |
+| **Test Isolation** (INV-08)          | Tests should be independent. Use `test.beforeEach` for setup, not shared state between tests                                                                     |
+| **API-Created State** (DEF-16)       | Create a test's GIVEN state through the API (helper fixtures such as `createdUser`) instead of clicking through the UI; a test that needs an existing account never uses the shared registered account |
+| **Branches and Commits** (DEF-21)    | Branch names follow the profile's pattern (preset `{type}/{ticket}-{short-name}`), commit messages its style (preset Conventional Commits); one ticket per pull request, opened as a draft with the kit's description template — see the `pull-requests` skill |
+| **CI Gate and Scope** (DEF-22)       | The pipeline's result follows the run summary: a new failure or an unstable test fails it, a known defect the plan lists does not. A pull request runs the smoke tests and the files the branch changed; the nightly run runs everything. Pipelines call `scripts/ci-test.mjs` — see the `ci` skill |
+| **JSDoc on Actions** (DEF-13)        | Add JSDoc comments (with `@param` and `@returns`) to action methods only — never on locator getters                                                              |
+| **Enums for Strings** (DEF-10)       | Use enums from `enums/` for repeated string values (roles, routes, messages) instead of hardcoding                                                               |
+
+### WON'T (Forbidden)
+
+<!-- prettier-ignore -->
+| Rule                          | Violation                                                                                                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **No XPath** (FW-03)                  | Never use XPath selectors                                                                                                                                     |
+| **No Hard Waits** (FW-01)             | Never use `page.waitForTimeout()`                                                                                                                             |
+| **No Secrets** (INV-04)                | Never hardcode credentials, use `process.env`                                                                                                                 |
+| **No `any`** (FW-04)                  | Never use `any` type                                                                                                                                          |
+| **No Tags on Describe** (DEF-06)       | Never put tags in `test.describe()`, only on individual tests                                                                                                 |
+| **No Multiple Tags** (DEF-06)          | Each test has exactly ONE tag: `@smoke`, `@sanity`, `@regression`, `@e2e`, `@api`, or `@destructive`. `@functional` is forbidden. **`@destructive` is the heaviest tag and always wins — but only for shared/global state.** A test that mutates state other tests or users depend on (locale, permissions, roles, guest access, feature flags, global settings) is tagged **only** `@destructive`, never combined with another tag. A test that creates and cleans up **only its own isolated data** is NOT destructive — tag it by importance (`@smoke`/`@regression`/`@api`/…). |
+| **No Magic Numbers** (DEF-12)          | Define timeouts and constants in `config/` or `enums/`                                                                                                        |
+| **No Manual Instantiation** (DEF-01)   | Never `new PageObject(page)` inside test files                                                                                                                |
+| **No Loose Schemas** (DEF-03)          | Never use `z.object()` for API schemas; use `z.strictObject()` to catch unexpected fields (a setup call reading one field with `z.looseObject()` is not an API schema)                                                                     |
+| **No JSDoc on Locators** (DEF-13)      | Never add JSDoc to locator getters or locator-returning methods; action methods only                                                                          |
+| **No Hardcoded Test Content** (DEF-09) | Never hardcode test content strings (names, labels, text values); use Faker factories instead                                                                 |
+| **No Explore-Only Files** (FW-06)     | Never commit test files whose sole purpose is dumping HTML or exploring the page structure                                                                    |
+| **No Empty-Body-Only 400** (DEF-18)    | Never test 400 responses with only an empty body; every field must have per-field omission and invalid-type `for...of` loop tests                            |
+| **No Feedback-Less POM** (FW-07)      | Never create page objects for forms or CRUD pages without selectors for success, error, and validation messages                                              |
+| **No Substitute UI Exploration** (INV-05 · DEF-17) | Never use **IDE browser MCP**, **Cursor-integrated browser tools**, **Playwright Test `codegen`**, or **any browser automation other than `playwright-cli`** to satisfy **Explore Before Generate** for page objects, UI tests, or UI-derived schemas. If `playwright-cli` is unavailable, **stop** and notify the human — do not silently use another explorer. |
+| **No Silent Coverage Drops** (INV-02 · DEF-18 · DEF-20) | Never omit a test because the app or API doesn't behave as expected. Write it as the contract / correct behaviour says and **let it fail** — no `test.fail` / `test.fixme`, no wrapper that turns the failure into a pass, no loosened assertion. The failing check names what is wrong, so the report shows every defect on every run. Only a project whose profile chooses quarantine (DEF-20) may skip a known-defect test instead: `test.skip` under a `// FIXME: <ID> — …` comment, with `annotation: { type: 'defect', description: '<ID> — …' }`, listed in the plan's "Skipped tests". Every status code in the OpenAPI spec must have a test — passing, failing or quarantined. |
+| **No Unasked Delivery** (INV-10 · INV-12) | Never commit, push, open or mark ready a pull request, or post a comment without the user's go-ahead for that step or a standing approval in the profile that covers it; never push to the base branch, force-push or merge — no standing approval covers those |
+| **No JSON Static Data** (DEF-08)       | Files under `test-data/static/**` must be TypeScript (`.ts` with `as const` exports). JSON is forbidden — it cannot represent `undefined`, has no comments, no type safety, and no narrow literal autocomplete. |
+
+---
+
+## File Naming Conventions
+
+> **Preset layout.** This table is the `playwright-house-preset` layout; the project's real paths are in `PROJECT-PROFILE.md` → `paths` — read them there first.
+>
+> **`{area}` is a placeholder.** In the table below, `{area}` represents the actual app-specific subdirectory name used in this repo (e.g., `front-office`, `back-office`, `portal`). **Before creating or referencing any path, run `ls pages/` (or the relevant root) to discover the real folder names and use those instead of the literal word `app`.**
+
+<!-- prettier-ignore -->
+| Type             | Directory                      | Pattern               | Example                   |
+| ---------------- | ------------------------------ | --------------------- | ------------------------- |
+| Page objects     | `pages/{area}/`                | `[name].page.ts`      | `login.page.ts`           |
+| Components       | `pages/components/`            | `[name].component.ts` | `navigation.component.ts` |
+| Functional tests | `tests/{area}/functional/`     | `[name].spec.ts`      | `login.spec.ts`           |
+| API tests        | `tests/{area}/api/`            | `[name].spec.ts`      | `login.spec.ts`           |
+| E2E tests        | `tests/{area}/e2e/`            | `[name].spec.ts`      | `checkout.spec.ts`        |
+| Setup files      | `tests/{area}/`                | `[name].setup.ts`     | `auth.setup.ts`           |
+| Data factories   | `test-data/factories/{area}/`  | `[name].factory.ts`   | `user.factory.ts`         |
+| Static data      | `test-data/static/{area}/`     | `[name].ts`           | `invalidCredentials.ts`   |
+| Zod schemas      | `fixtures/api/schemas/{area}/` | `[name]Schema.ts`     | `userSchema.ts`           |
+| Helper fixtures  | `fixtures/helper/`             | `[name]-fixture.ts`   | `helper-fixture.ts`       |
+| Enums            | `enums/{area}/`                | `[name].ts`           | `front-office.ts`         |
+
+---
+
+## AI Workflow
+
+> **MUST — load `ai-native-workflow` first on every non-trivial task.** It implements invariant INV-10. It is the sole entry-point router for this scaffold. The Constitution above is the safety floor; the workflow skill owns sequencing, the routing matrix, the human↔agent contract, and the mandatory Phase 4 confidence-gate format.
+
+The full 8-phase workflow lives in **`.cursor/skills/ai-native-workflow/SKILL.md`**:
+
+1. **Classify** intent → 2. **Route** to first skill → 3. **Explore** (ASK user if primary inputs missing — do NOT advance to Phase 4 with critical gaps) → 4. **Plan + Confidence** (1-10 + Rationale + Unknowns block) → 5. **Human gate** → 6. **Apply** → 7. **Verify** (run affected tests; on red load `debugging`) → 8. **Report + commit ask**.
+
+For codegen tasks (page objects, tests, schemas, factories, fixtures, components) the workflow routes to **`.cursor/skills/common-tasks/SKILL.md`** for prompt templates and the verification checklist.
+
+For tasks that write tests, the proposal is the **test plan**, designed with **`.cursor/skills/test-design/SKILL.md`** (product risks, technique evaluation, models): Phase 4 writes only the plan, and specs follow the user's approval of it.
+
+A task that runs from a ticket to a pull request can be split into four roles — planner, generator, healer, reviewer — defined in `roles/` and generated as agents in `.cursor/agents/` (`npm run roles:sync`). The main session conducts them and keeps every decision with the user: the plan's approval, each product defect, each outward step. See the workflow skill, "Roles".
+
+Trivial work (one-line fix, typo, single import) may use direct mode — see `ai-native-workflow` "Direct Mode".
+
+---
+
+## Skills Index
+
+Detailed skills live in `.cursor/skills/` and contain in-depth rules, patterns, and examples. Read the relevant skill when working on matching files.
+
+<!-- prettier-ignore -->
+| Skill             | Read When Working On                                           | What It Covers                                                                      |
+| ----------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `playwright-cli`  | UI exploration, page objects, and test case creation           | Playwright CLI commands for browser interaction, storage, tracing, and generated test code |
+| `selectors`       | `pages/**`                                                     | Selector priority, locator examples, forbidden patterns                             |
+| `page-objects`    | `pages/**`                                                     | POM pattern, getter locators, component composition, registration                   |
+| `fixtures`        | `fixtures/**`, `tests/**`                                      | Dependency injection, fixture creation, merging into fixtures.ts                     |
+| `test-standards`  | `tests/**`                                                     | Test structure, imports, tagging, steps, assertions, data-driven tests, the plan contract, skipped tests              |
+| `test-design`     | Planning new or extended tests (functional, E2E, API); `test-plans/**` | Product risks, ISTQB techniques (CTAL-TA v4.0), technique evaluation, the test plan as the proposal |
+| `type-safety`     | `**/*.ts`                                                      | Zod schemas, no-any enforcement, TypeScript strict mode                             |
+| `data-strategy`   | `test-data/**`, `tests/**`                                     | Factories (Faker + Zod), static TS data (`as const` three-tier rule), when to use which |
+| `api-testing`     | `fixtures/api/**`, `fixtures/helper/**`, `tests/**/api/**`     | `apiRequest` fixture, schema validation, helper fixtures for setup/teardown         |
+| `enums`           | `enums/**`                                                     | Enum conventions, naming, organization                                              |
+| `config`          | `config/**`                                                    | Configuration patterns, environment variables                                       |
+| `helpers`         | `helpers/**`                                                   | Helper function conventions, auth helpers, helper vs fixture                        |
+| `common-tasks`    | Code generation tasks                                          | Prompt templates, anti-patterns checklist, verification checklist                   |
+| `refactor-values` | Changing enum values, enum keys, or `test-data/static/` values | Impact analysis, cascading updates, TypeScript verification workflow                |
+| `debugging`       | Whenever a test fails or behaves unexpectedly                   | Failure-mode taxonomy, capture defaults (trace / screenshot / video), UI Mode / Trace Viewer / Inspector / report tools, CI-only-failure replay workflow |
+| `project-profile` | Any task that needs a project fact (paths, commands, env vars, API conventions) or a convention choice; editing `PROJECT-PROFILE.md`; a stale profile summary | Reading `PROJECT-PROFILE.md`, precedence (invariants > profile overrides > preset defaults), generated summary blocks (`profile:sync` / `profile:check`) |
+| `kit-tailor` | Installing the kit in a repository, a missing or incomplete `PROJECT-PROFILE.md`, a repository convention that conflicts with a kit default, upgrading the kit | Adopt / scaffold modes, discovery with evidence, DEF overrides with reasons, open questions, approval before applying, merge-never-overwrite |
+| `ai-native-workflow` | **Sole entry point for non-trivial work.** Onboarding, "how should I work with AI here?", "which skill for X?", planning a multi-step change | 8-phase main workflow (classify → route → explore → plan+confidence → human gate → apply → verify → report), Phase 4 confidence-gate format, skill-routing matrix; deeper context in `references/` |
+| `ci`              | Adding or changing a CI pipeline for the tests; a red pipeline | What pull requests and nightly runs select, shards, the merged report and run summary, the gate — GitHub Actions / GitLab CI / Azure Pipelines / Jenkins |
+| `tracker`         | A task that starts from a ticket; reporting a confirmed product defect | Reading a ticket as the test basis, the defect report, filing after confirmation — GitHub Issues / GitLab / Jira / Azure Boards / Linear, by CLI, MCP or through the user |
+| `pull-requests`   | Committing, pushing, opening or updating a pull request / merge request | Branch names, commit messages, the description template with the run summary, draft pull requests on GitHub / GitLab / Azure DevOps / Bitbucket |
+| `skill-creator`   | Creating or improving agent skills (`SKILL.md`, evals, scripts) | Draft skills, eval loops, benchmarks, description optimization, packaging New kit skills follow the common contract in `templates/SKILL.template.md`; existing skills adopt it when next edited |
+| `pr-reviewer`     | Reviewing a branch as a PR against the base branch (auto-resolved — main/master; user names a branch + review intent) | Fetch + switch + three-dot diff, route changed paths to applicable skills, verify (eslint/prettier/tsc + attempt tests), tiered report + confidence, optional gated fix + commit |
+
+Skills are at `.cursor/skills/{name}/SKILL.md`. Read the relevant skill file before generating or modifying code in that area.
+
+
+---
+
+## Container Environment
+
+When running inside the Dev Container (`DEVCONTAINER=true`):
+
+- **Playwright browsers** for **`npm test`** live at `/ms-playwright` (`PLAYWRIGHT_BROWSERS_PATH`). **`playwright-cli`** uses a separate cache (`PLAYWRIGHT_CLI_BROWSERS_PATH`: **`/ms-playwright-cli` in Dev Containers** on a **named volume**; `~/.cache/playwright-cli-browsers` locally) via `scripts/playwright-cli.sh`. `@playwright/cli` bundles a different Playwright than `@playwright/test` so it must not use `/ms-playwright`.
+- **Pre-warmed caches** -- The Docker image pre-populates `~/.npm` (npm package cache) and `/ms-playwright-cli` (CLI Chromium) during build. Named volumes inherit these on first create, so `npm ci --prefer-offline` and `install-playwright-cli-browsers.sh` complete near-instantly.
+- **`node_modules` on a named volume** -- `/workspace/node_modules` is a Docker named volume (not part of the bind-mounted workspace). This avoids slow bind-mount I/O on Windows and macOS.
+- **Line endings** -- `.gitattributes` enforces `eol=lf` for `*.sh` and `Dockerfile`. On Windows, if Git's `core.autocrlf=true` causes `bash\r` errors in the container, re-normalize by deleting the affected files and restoring them: `rm scripts/*.sh .devcontainer/Dockerfile .devcontainer/post-create.sh && git checkout -- scripts/ .devcontainer/`
+
+---
+
+## Key File Locations
+
+> **Preset layout** — the project's real paths are in `PROJECT-PROFILE.md` → `paths`.
+>
+> **`{area}` is a placeholder** for the actual app-specific subdirectory (e.g., `front-office`, `back-office`). Check the real folder names with `ls` before using any path.
+
+```
+fixtures/fixtures.ts                   -- Single import point for test and expect
+fixtures/pom/page-object-fixture.ts    -- `pageManager` fixture (page objects) + `resetStorageState`
+pages/page-manager.ts                  -- PageManager: one getter per page object
+fixtures/api/api-request-fixture.ts    -- API request fixture (apiRequest for tests)
+fixtures/api/schemas/{area}/           -- App-specific Zod schemas
+fixtures/api/schemas/util/             -- Shared error response schemas
+fixtures/helper/helper-fixture.ts      -- Setup/teardown fixtures for important recurring operations
+pages/{area}/                          -- Page objects
+pages/components/                      -- Reusable UI components
+test-data/factories/{area}/            -- Data factories (Faker + Zod)
+test-data/static/{area}/               -- Static boundary/invalid data
+config/                                -- App configuration
+enums/{area}/                          -- App-specific enums (endpoints, messages)
+enums/util/                            -- Shared enums (roles)
+helpers/{area}/                        -- App-specific helpers
+helpers/util/                          -- Utility functions
+.cursor/skills/                        -- Detailed AI skills (rules, patterns, examples)
+```

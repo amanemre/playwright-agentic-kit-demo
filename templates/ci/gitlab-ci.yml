@@ -1,0 +1,73 @@
+# Tests on GitLab CI — the kit's CI template (the `ci` skill). Not yet run on a real GitLab.
+# kit-tailor copies it to .gitlab-ci.yml (or includes it); from then on it belongs to the project.
+#
+# Before the first run:
+#   - set the image tag to the Playwright version in package.json;
+#   - define the env vars PROJECT-PROFILE.md names (env) as CI/CD variables — credentials masked
+#     and protected — never in this file;
+#   - keep `parallel` in step with the profile's ci.shards; add a pipeline schedule for the nightly run.
+# What a merge request and a nightly run select, and what fails the pipeline, come from the
+# profile's `ci` block through scripts/ci-test.mjs.
+stages: [test, serial, summary]
+
+default:
+    image: mcr.microsoft.com/playwright:v<PLAYWRIGHT_VERSION>-noble
+    cache:
+        key:
+            files: [package-lock.json]
+        paths: [.npm/]
+    before_script:
+        - npm ci --cache .npm --prefer-offline
+
+variables:
+    GIT_DEPTH: 0 # the changed-files run compares with the target branch
+
+workflow:
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+          variables:
+              MODE: pull-request
+        - if: $CI_PIPELINE_SOURCE == "schedule"
+          variables:
+              MODE: nightly
+        - if: $CI_PIPELINE_SOURCE == "web"
+          variables:
+              MODE: nightly
+
+test:
+    stage: test
+    parallel: 2 # ci.shards
+    script:
+        - node scripts/ci-test.mjs --mode "$MODE" --shard "$CI_NODE_INDEX/$CI_NODE_TOTAL" --base "origin/${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-$CI_DEFAULT_BRANCH}"
+    artifacts:
+        when: always
+        paths: [blob-report/]
+        expire_in: 3 days
+
+# Tests with the profile's serial tag: alone, one worker, not on merge requests
+serial:
+    stage: serial
+    rules:
+        - if: $MODE == "nightly"
+    script:
+        - node scripts/ci-test.mjs --mode serial
+    artifacts:
+        when: always
+        paths: [blob-report/]
+        expire_in: 3 days
+
+# One report and one run summary for all shards; with ci.gate "summary" this job is the gate
+summary:
+    stage: summary
+    when: always
+    script:
+        # the gate's result is kept, so the drafts are written even when the gate fails
+        - GATE=0; node scripts/ci-test.mjs --merge || GATE=$?
+        - node scripts/triage-draft.mjs
+        # publishes only under a standing approval in the profile; automated for GitHub only so far
+        - node scripts/ci-publish.mjs --what run-summary
+        - exit $GATE
+    artifacts:
+        when: always
+        paths: [reports/]
+        expire_in: 14 days

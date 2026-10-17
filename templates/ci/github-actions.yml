@@ -1,0 +1,143 @@
+# Tests on GitHub Actions — the kit's CI template (the `ci` skill).
+# kit-tailor copies it to .github/workflows/tests.yml; from then on it belongs to the project.
+#
+# Before the first run:
+#   - replace every <…>: the env var names are in PROJECT-PROFILE.md (env), their values live in
+#     the repository's variables (URLs) and secrets (credentials) — never in this file;
+#   - keep the shard list in step with the profile's ci.shards.
+# What a pull request and a nightly run select, and what fails the pipeline, come from the
+# profile's `ci` block through scripts/ci-test.mjs — not from this file.
+name: Tests
+
+on:
+    pull_request:
+    schedule:
+        - cron: '0 2 * * *' # nightly, UTC
+    workflow_dispatch:
+
+concurrency:
+    group: tests-${{ github.ref }}
+    cancel-in-progress: true
+
+env:
+    MODE: ${{ github.event_name == 'pull_request' && 'pull-request' || 'nightly' }}
+    <APP_URL_VARIABLE>: ${{ vars.<APP_URL_VARIABLE> }}
+    <CREDENTIAL_VARIABLE>: ${{ secrets.<CREDENTIAL_VARIABLE> }}
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        strategy:
+            fail-fast: false
+            matrix:
+                shard: [1, 2] # ci.shards
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  fetch-depth: 0 # the changed-files run compares with the base branch
+
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 22
+                  cache: npm
+
+            - run: npm ci
+
+            - run: npx playwright install --with-deps chromium
+
+            # A project that loads its settings from an env file (the profile's env.files)
+            # writes that file here from the variables above — never commit it.
+
+            - name: Run tests
+              run: >
+                  node scripts/ci-test.mjs --mode "$MODE"
+                  --shard ${{ matrix.shard }}/${{ strategy.job-total }}
+                  --base origin/${{ github.base_ref || github.event.repository.default_branch }}
+
+            - uses: actions/upload-artifact@v7
+              if: ${{ !cancelled() }}
+              with:
+                  name: blob-report-${{ matrix.shard }}
+                  path: blob-report/
+                  retention-days: 3
+
+    # Tests with the profile's serial tag: alone, one worker, not on pull requests
+    serial:
+        if: github.event_name != 'pull_request'
+        needs: test
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci
+            - run: npx playwright install --with-deps chromium
+            - run: node scripts/ci-test.mjs --mode serial
+            - uses: actions/upload-artifact@v7
+              if: ${{ !cancelled() }}
+              with:
+                  name: blob-report-serial
+                  path: blob-report/
+                  if-no-files-found: ignore
+                  retention-days: 3
+
+    # One report and one run summary for all shards; with ci.gate "summary" this job is the gate
+    summary:
+        if: ${{ !cancelled() }}
+        needs: [test, serial]
+        runs-on: ubuntu-latest
+        # Publishing needs write access only when the profile holds the standing approval:
+        # add `pull-requests: write` for post-run-summary, `issues: write` for open-triage-issue.
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci
+
+            - uses: actions/download-artifact@v8
+              with:
+                  pattern: blob-report-*
+                  path: blob-report
+                  merge-multiple: true
+
+            - name: Merge the reports and summarise the run
+              run: node scripts/ci-test.mjs --merge
+
+            - name: Draft the triage report and defect reports for new failures
+              if: ${{ !cancelled() }}
+              run: node scripts/triage-draft.mjs
+
+            - name: Show the run summary
+              if: ${{ !cancelled() }}
+              run: |
+                  cat reports/run-summary.md >> "$GITHUB_STEP_SUMMARY"
+                  if [ -f reports/triage.md ]; then cat reports/triage.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+            # These two publish only under a standing approval in the profile that is in force
+            # today; without one they say so and do nothing.
+            - name: Post the run summary on the pull request
+              if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+              run: node scripts/ci-publish.mjs --what run-summary --pr ${{ github.event.pull_request.number }}
+              env:
+                  GH_TOKEN: ${{ github.token }}
+
+            - name: Open or update the triage issue
+              if: ${{ !cancelled() && github.event_name != 'pull_request' }}
+              run: node scripts/ci-publish.mjs --what triage-issue
+              env:
+                  GH_TOKEN: ${{ github.token }}
+
+            - uses: actions/upload-artifact@v7
+              if: ${{ !cancelled() }}
+              with:
+                  name: reports
+                  path: reports/
+                  retention-days: 14

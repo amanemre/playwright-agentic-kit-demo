@@ -1,0 +1,70 @@
+// Tests on Jenkins — the kit's CI template (the `ci` skill). Not yet run on a real Jenkins.
+// kit-tailor copies it to Jenkinsfile; from then on it belongs to the project.
+//
+// Before the first run:
+//   - set the image tag to the Playwright version in package.json;
+//   - replace every <…>: the env var names are in PROJECT-PROFILE.md (env); bind credentials
+//     from the Jenkins credentials store — never in this file;
+//   - this template runs one shard; for more, add parallel stages that each pass --shard i/n.
+// What a pull request and a nightly run select, and what fails the pipeline, come from the
+// profile's `ci` block through scripts/ci-test.mjs.
+pipeline {
+    agent {
+        docker { image 'mcr.microsoft.com/playwright:v<PLAYWRIGHT_VERSION>-noble' }
+    }
+
+    triggers {
+        cron('H 2 * * *') // nightly
+    }
+
+    options {
+        timeout(time: 45, unit: 'MINUTES')
+    }
+
+    environment {
+        // a multibranch pull request build sets CHANGE_ID
+        MODE = "${env.CHANGE_ID ? 'pull-request' : 'nightly'}"
+        <CREDENTIAL_VARIABLE> = credentials('<jenkins-credential-id>')
+    }
+
+    stages {
+        stage('Install') {
+            steps {
+                sh 'npm ci'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'git fetch origin "${CHANGE_TARGET:-main}"'
+                sh 'node scripts/ci-test.mjs --mode "$MODE" --base "origin/${CHANGE_TARGET:-main}"'
+            }
+        }
+
+        // Tests with the profile's serial tag: alone, one worker, not on pull requests
+        stage('Serial') {
+            when {
+                expression { !env.CHANGE_ID }
+            }
+            steps {
+                sh 'node scripts/ci-test.mjs --mode serial'
+            }
+        }
+    }
+
+    post {
+        always {
+            // One report and one run summary; with ci.gate "summary" this step is the gate.
+            // The gate's result is kept, so the drafts are written even when it fails;
+            // publishing happens only under a standing approval in the profile.
+            sh '''
+                GATE=0
+                node scripts/ci-test.mjs --merge || GATE=$?
+                node scripts/triage-draft.mjs
+                node scripts/ci-publish.mjs --what run-summary
+                exit $GATE
+            '''
+            archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
+        }
+    }
+}

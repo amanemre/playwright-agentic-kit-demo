@@ -1,0 +1,102 @@
+# Tests on Azure Pipelines — the kit's CI template (the `ci` skill). Not yet run on a real Azure DevOps.
+# kit-tailor copies it to azure-pipelines.yml; from then on it belongs to the project.
+#
+# Before the first run:
+#   - replace every <…>: the env var names are in PROJECT-PROFILE.md (env); define them as pipeline
+#     variables — credentials as secret variables, which must be mapped under `env:` below;
+#   - keep `parallel` in step with the profile's ci.shards.
+# What a pull request and a nightly run select, and what fails the pipeline, come from the
+# profile's `ci` block through scripts/ci-test.mjs.
+trigger: none
+
+pr:
+    branches:
+        include: ['*']
+
+schedules:
+    - cron: '0 2 * * *' # nightly, UTC
+      displayName: Nightly
+      branches:
+          include: [main]
+      always: true
+
+variables:
+    - name: MODE
+      ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+          value: pull-request
+      ${{ else }}:
+          value: nightly
+
+pool:
+    vmImage: ubuntu-latest
+
+jobs:
+    - job: test
+      timeoutInMinutes: 30
+      strategy:
+          parallel: 2 # ci.shards
+      steps:
+          - checkout: self
+            fetchDepth: 0 # the changed-files run compares with the target branch
+          - task: UseNode@1
+            inputs:
+                version: 22.x
+          - script: npm ci
+          - script: npx playwright install --with-deps chromium
+          - script: >
+                node scripts/ci-test.mjs --mode "$(MODE)"
+                --shard "$(System.JobPositionInPhase)/$(System.TotalJobsInPhase)"
+                --base "origin/$(System.PullRequest.TargetBranchName)"
+            displayName: Run tests
+            env:
+                <CREDENTIAL_VARIABLE>: $(<CREDENTIAL_VARIABLE>)
+          - publish: blob-report
+            artifact: blob-report-$(System.JobPositionInPhase)
+            condition: not(canceled())
+
+    # Tests with the profile's serial tag: alone, one worker, not on pull requests
+    - job: serial
+      dependsOn: test
+      condition: and(not(canceled()), ne(variables['Build.Reason'], 'PullRequest'))
+      timeoutInMinutes: 30
+      steps:
+          - task: UseNode@1
+            inputs:
+                version: 22.x
+          - script: npm ci
+          - script: npx playwright install --with-deps chromium
+          - script: node scripts/ci-test.mjs --mode serial
+            env:
+                <CREDENTIAL_VARIABLE>: $(<CREDENTIAL_VARIABLE>)
+          - publish: blob-report
+            artifact: blob-report-serial
+            condition: not(canceled())
+            continueOnError: true
+
+    # One report and one run summary for all shards; with ci.gate "summary" this job is the gate
+    - job: summary
+      dependsOn: [test, serial]
+      condition: not(canceled())
+      steps:
+          - task: UseNode@1
+            inputs:
+                version: 22.x
+          - script: npm ci
+          - task: DownloadPipelineArtifact@2
+            inputs:
+                patterns: blob-report-*/**
+                path: $(System.DefaultWorkingDirectory)/blob-download
+          - script: mkdir -p blob-report && find blob-download -name '*.zip' -exec cp {} blob-report/ \;
+          - script: node scripts/ci-test.mjs --merge
+            displayName: Merge the reports and summarise the run
+          - script: node scripts/triage-draft.mjs
+            displayName: Draft the triage report and defect reports for new failures
+            condition: not(canceled())
+          - script: echo "##vso[task.uploadsummary]$(System.DefaultWorkingDirectory)/reports/run-summary.md"
+            condition: not(canceled())
+          # publishes only under a standing approval in the profile; automated for GitHub only so far
+          - script: node scripts/ci-publish.mjs --what run-summary
+            condition: not(canceled())
+          - publish: reports
+            artifact: reports
+            condition: not(canceled())
