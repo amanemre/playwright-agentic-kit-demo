@@ -2,11 +2,30 @@
 export enum Messages {
     INCORRECT_CREDENTIALS = 'Incorrect username or password',
     USER_VALIDATION_FAILED = 'User validation failed',
+    CONTACT_VALIDATION_FAILED = 'Contact validation failed',
 }
 
 /** Page headings of contact-list-app — verified against the live app */
 export enum Headings {
     ADD_USER = 'Add User',
+    ADD_CONTACT = 'Add Contact',
+}
+
+/** Column headings of the contact list table, in their order — verified against the live app */
+export enum ContactTableColumns {
+    NAME = 'Name',
+    BIRTHDATE = 'Birthdate',
+    EMAIL = 'Email',
+    PHONE = 'Phone',
+    ADDRESS = 'Address',
+    CITY_STATE_POSTAL_CODE = 'City, State/Province, Postal Code',
+    COUNTRY = 'Country',
+}
+
+/** Field labels of the contact details page — verified against the live app */
+export enum ContactDetailsLabels {
+    FIRST_NAME = 'First Name:',
+    LAST_NAME = 'Last Name:',
 }
 
 /** UI routes of contact-list-app, relative to APP_URL */

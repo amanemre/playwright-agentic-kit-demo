@@ -10,8 +10,28 @@ export class ContactListPage {
         return this.page.getByRole('button', { name: 'Logout' });
     }
 
+    get addContactButton(): Locator {
+        return this.page.getByRole('button', { name: 'Add a New Contact' });
+    }
+
+    get columnHeadings(): Locator {
+        return this.page.getByRole('columnheader');
+    }
+
+    get contactRows(): Locator {
+        return this.page
+            .getByRole('row')
+            .filter({ has: this.page.getByRole('cell') });
+    }
+
     contactName(fullName: string): Locator {
         return this.page.getByRole('cell', { name: fullName, exact: true });
+    }
+
+    contactRowCells(fullName: string): Locator {
+        return this.contactRows
+            .filter({ has: this.contactName(fullName) })
+            .getByRole('cell');
     }
 
     // ==================== Actions ====================
