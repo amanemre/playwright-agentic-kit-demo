@@ -248,10 +248,10 @@ R3 merges N/Y and N/N. Checksum: 1 + 1 + 2 = 4 = the full table's feasible rules
 
 ## Why tests currently fail
 
-| Behaviour of the live app                                             | Failing lines                                            | Scenarios               | Defect                                        |
-| --------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------- | --------------------------------------------- |
-| An `email` array holding the account's email logs in: 200 and a token | THEN HTTP status is 401 · AND the response body is empty | LAPI-3.3 (`email` case) | not filed — confirmed by the user, 2026-10-16 |
-| `PUT /users/login` hangs ~30 s and ends with Heroku's 503 page        | THEN HTTP status is 405                                  | LAPI-4.1                | not filed — confirmed by the user, 2026-10-16 |
+| Behaviour of the live app                                             | Failing lines                                            | Scenarios               | Defect                                    |
+| --------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------- | ----------------------------------------- |
+| An `email` array holding the account's email logs in: 200 and a token | THEN HTTP status is 401 · AND the response body is empty | LAPI-3.3 (`email` case) | AGE-8 — confirmed by the user, 2026-10-16 |
+| `PUT /users/login` hangs ~30 s and ends with Heroku's 503 page        | THEN HTTP status is 405                                  | LAPI-4.1                | AGE-9 — confirmed by the user, 2026-10-16 |
 
 ## Skipped tests
 

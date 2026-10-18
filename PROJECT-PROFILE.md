@@ -175,12 +175,13 @@ Linear, through the MCP server in `.mcp.json`. Tickets live in the **team** "Age
 
 ## Known defects
 
-| Defect                                                                                           | Scenario           | Plan                          |
-| ------------------------------------------------------------------------------------------------ | ------------------ | ----------------------------- |
-| `POST /users/login` with `email` as an array holding the account's email returns 200 and a token | LAPI-3.3 (`email`) | `test-plans/app/login-api.md` |
-| `PUT /users/login` hangs ~30 s and returns 503 instead of 405                                    | LAPI-4.1           | `test-plans/app/login-api.md` |
+| Defect                                                                                           | Scenario           | Plan                             | Ticket |
+| ------------------------------------------------------------------------------------------------ | ------------------ | -------------------------------- | ------ |
+| `POST /users/login` with `email` as an array holding the account's email returns 200 and a token | LAPI-3.3 (`email`) | `test-plans/app/login-api.md`    | AGE-8  |
+| `PUT /users/login` hangs ~30 s and returns 503 instead of 405                                    | LAPI-4.1           | `test-plans/app/login-api.md`    | AGE-9  |
+| `/contactList` without a session is not redirected to the login page                             | CLIST-4.1          | `test-plans/app/contact-list.md` | AGE-7  |
 
-Both were confirmed by the user on 2026-10-16 and are not filed yet in Linear.
+Confirmed by the user (LAPI on 2026-10-16, CLIST on 2026-10-18) and filed in Linear on 2026-10-18.
 
 ## Worked examples
 
