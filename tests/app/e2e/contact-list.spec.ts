@@ -121,18 +121,23 @@ test.describe('contact list', () => {
     let otherUserToken: string | undefined;
 
     test.afterEach(async ({ apiRequest, createdUser }) => {
-        await deleteAllContacts(apiRequest, createdUser.token);
+        const otherToken = otherUserToken;
+        otherUserToken = undefined;
 
-        if (otherUserToken) {
-            await deleteAllContacts(apiRequest, otherUserToken);
-            const deletion = await apiRequest({
-                method: 'DELETE',
-                url: ApiEndpoints.CURRENT_USER,
-                baseUrl: process.env.API_URL,
-                headers: otherUserToken,
-            });
-            expect(deletion.status).toBe(HttpStatusCodes.OK);
-            otherUserToken = undefined;
+        // The second account is deleted even when the first cleanup fails
+        try {
+            await deleteAllContacts(apiRequest, createdUser.token);
+        } finally {
+            if (otherToken) {
+                await deleteAllContacts(apiRequest, otherToken);
+                const deletion = await apiRequest({
+                    method: 'DELETE',
+                    url: ApiEndpoints.CURRENT_USER,
+                    baseUrl: process.env.API_URL,
+                    headers: otherToken,
+                });
+                expect(deletion.status).toBe(HttpStatusCodes.OK);
+            }
         }
     });
 
@@ -437,6 +442,7 @@ test.describe('contact list without a session', () => {
             });
 
             await test.step('WHEN they open the contact list', async () => {
+                // Not contactListPage.open(): it waits for GET /contacts, which a redirected page never sends
                 await page.goto(AppRoutes.CONTACT_LIST);
             });
 
