@@ -268,9 +268,9 @@ No upper limit is stated or observable; the representative of "multiple" is its 
 
 ## Why tests currently fail
 
-| Behaviour of the live app                                                                                         | Failing lines                | Scenarios | Defect    |
-| ----------------------------------------------------------------------------------------------------------------- | ---------------------------- | --------- | --------- |
-| `/contactList` without a session is not redirected: it shows the heading and buttons, no table, and no login form | THEN the login form is shown | CLIST-4.1 | not filed |
+| Behaviour of the live app                                                                                         | Failing lines                | Scenarios | Defect |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------- | --------- | ------ |
+| `/contactList` without a session is not redirected: it shows the heading and buttons, no table, and no login form | THEN the login form is shown | CLIST-4.1 | AGE-7  |
 
 ## Skipped tests
 
