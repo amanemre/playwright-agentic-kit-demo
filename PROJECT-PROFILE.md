@@ -120,7 +120,11 @@ delivery:
     branchPattern: '{type}/{ticket}-{short-name}' # decision — user, 2026-10-17: new branches use it with Linear IDs (e.g. test/AGE-1-add-contact); earlier branches keep their names
     commitStyle: conventional # every commit subject: chore: / test:
 
-overrides: []
+overrides:
+    - rule: DEF-05
+      choice: a read-back call may run inside its AND step
+      reason: a call that only reads back the effect of the request under test (e.g. a login proving a password was stored) runs inside the AND step that checks that effect, gated with skipIfChecksFailed; the request under test keeps its own WHEN step — a functional test checks only its own point
+      source: decision — user, 2026-10-19 (AGE-10)
 
 projectTerms: [Contact List, contact-list-app, thinking-tester, herokuapp]
 
@@ -139,7 +143,7 @@ openQuestions: []
 
 The Contact List App (`APP_URL`) is a small public demo app: users sign up, log in and manage their own contacts. The login page is `/`; after login the user lands on `/contactList`. The app says its database "will be purged as needed", so tests never rely on data they did not create.
 
-Plans: `test-plans/app/login.md` (UI login), `test-plans/app/login-api.md` (`POST /users/login`).
+Plans: `test-plans/app/login.md` (UI login), `test-plans/app/login-api.md` (`POST /users/login`), `test-plans/app/add-user-api.md` (`POST /users`).
 
 ## API conventions
 
@@ -175,13 +179,17 @@ Linear, through the MCP server in `.mcp.json`. Tickets live in the **team** "Age
 
 ## Known defects
 
-| Defect                                                                                           | Scenario           | Plan                             | Ticket |
-| ------------------------------------------------------------------------------------------------ | ------------------ | -------------------------------- | ------ |
-| `POST /users/login` with `email` as an array holding the account's email returns 200 and a token | LAPI-3.3 (`email`) | `test-plans/app/login-api.md`    | AGE-8  |
-| `PUT /users/login` hangs ~30 s and returns 503 instead of 405                                    | LAPI-4.1           | `test-plans/app/login-api.md`    | AGE-9  |
-| `/contactList` without a session is not redirected to the login page                             | CLIST-4.1          | `test-plans/app/contact-list.md` | AGE-7  |
+| Defect                                                                                                           | Scenario                     | Plan                             | Ticket |
+| ---------------------------------------------------------------------------------------------------------------- | ---------------------------- | -------------------------------- | ------ |
+| `POST /users/login` with `email` as an array holding the account's email returns 200 and a token                 | LAPI-3.3 (`email`)           | `test-plans/app/login-api.md`    | AGE-8  |
+| `PUT /users/login` hangs ~30 s and returns 503 instead of 405                                                    | LAPI-4.1                     | `test-plans/app/login-api.md`    | AGE-9  |
+| `/contactList` without a session is not redirected to the login page                                             | CLIST-4.1                    | `test-plans/app/contact-list.md` | AGE-7  |
+| `POST /users` without `email` answers "Email address is already in use" instead of reporting `email` as required | UAPI-4.1 (`email`), UAPI-6.1 | `test-plans/app/add-user-api.md` | AGE-11 |
+| `POST /users` trims the password, so the account does not log in with the password as sent                       | UAPI-2.2                     | `test-plans/app/add-user-api.md` | AGE-12 |
+| `POST /users` accepts a password longer than 72 characters and cuts it to 72                                     | UAPI-5.3                     | `test-plans/app/add-user-api.md` | AGE-13 |
+| `PUT /users` hangs ~30 s and returns 503 instead of 405                                                          | UAPI-7.1                     | `test-plans/app/add-user-api.md` | AGE-14 |
 
-Confirmed by the user (LAPI on 2026-10-16, CLIST on 2026-10-18) and filed in Linear on 2026-10-18.
+Confirmed by the user (LAPI on 2026-10-16, CLIST and UAPI on 2026-10-18) and filed in Linear (AGE-7 to AGE-9 on 2026-10-18, AGE-11 to AGE-14 on 2026-10-19).
 
 ## Worked examples
 
