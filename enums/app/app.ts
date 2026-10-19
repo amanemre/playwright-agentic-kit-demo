@@ -3,6 +3,8 @@ export enum Messages {
     INCORRECT_CREDENTIALS = 'Incorrect username or password',
     USER_VALIDATION_FAILED = 'User validation failed',
     CONTACT_VALIDATION_FAILED = 'Contact validation failed',
+    EMAIL_ALREADY_IN_USE = 'Email address is already in use',
+    EMAIL_INVALID = 'Email is invalid',
 }
 
 /** Page headings of contact-list-app — verified against the live app */

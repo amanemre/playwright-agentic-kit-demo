@@ -30,3 +30,21 @@ export const generateUser = (
         ...overrides,
     });
 };
+
+/**
+ * Generates a valid user payload in which one field has exactly `length`
+ * characters (an email's length is its local part); the content is generated.
+ * @param {keyof CreateUserRequest} field - The field to size.
+ * @param {number} length - The number of characters.
+ * @returns {CreateUserRequest} A payload validated against the schema.
+ */
+export const generateUserWithLength = (
+    field: keyof CreateUserRequest,
+    length: number
+): CreateUserRequest =>
+    generateUser({
+        [field]:
+            field === 'email'
+                ? `${faker.string.alpha({ length, casing: 'lower' })}@example.com`
+                : faker.string.alpha(length),
+    });
