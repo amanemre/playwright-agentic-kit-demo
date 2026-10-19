@@ -470,7 +470,7 @@ test.describe(`POST ${ApiEndpoints.USERS}`, () => {
 
                 await verifyRejected(
                     response,
-                    `the error reports \`${field}\` only, with the API's reason for this value: ${reason}`,
+                    `the error reports \`${field}\` only, with the API's reason for this value: \`${reason}\``,
                     kindsOf,
                     { [field]: REASON_KINDS[reason] }
                 );
@@ -497,7 +497,7 @@ test.describe(`POST ${ApiEndpoints.USERS}`, () => {
                 });
 
                 await verifyStored(
-                    'AND the account holds the value as a string (names: the returned user; password: POST /users/login with it returns 200)',
+                    'AND the account holds the value as a string',
                     apiRequest,
                     field,
                     response,
@@ -555,7 +555,7 @@ test.describe(`POST ${ApiEndpoints.USERS}`, () => {
                 });
 
                 await verifyStored(
-                    'AND the account holds the sent value (names and email: the returned user; password: POST /users/login with it returns 200)',
+                    'AND the account holds the sent value',
                     apiRequest,
                     field,
                     response,

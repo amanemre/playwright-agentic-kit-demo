@@ -341,8 +341,10 @@ The `GET /users/me` response is checked for its status and the user's `_id`, nam
 
 1. **WHEN** POST /users is sent with `<field>` as `<value>` and the other fields valid
 2. **THEN** HTTP status is 400
-3. **AND** the error reports `<field>` only, with the API's reason for this value: required (a blank or null name, a null password), wrong type (an array or object), invalid email, or too short (a boolean password)
+3. **AND** the error reports `<field>` only, with the API's reason for this value: `<reason>`
 4. **AND** the response body has the expected schema
+
+`<reason>` follows from the case: required (a blank or null name, a null password), wrong type (an array or object), invalid email (an email that is a number, boolean or null), or too short (a boolean password).
 
 #### 4.4 POST /users with "<field>" as <value> returns 201 and stores it as a string
 
@@ -366,7 +368,9 @@ The `GET /users/me` response is checked for its status and the user's `_id`, nam
 
 1. **WHEN** POST /users is sent with `<field>` as `<value>` and the other fields valid
 2. **THEN** HTTP status is 201
-3. **AND** the account holds the value as a string (names: the returned user; password: POST /users/login with it returns 200)
+3. **AND** the account holds the value as a string
+
+For a name, step 3 checks the returned user; for the password, it logs in with it (`POST /users/login` returns 200).
 
 #### 4.5 POST /users with an email <partition> returns 400 and an error for "email"
 
@@ -420,7 +424,9 @@ The `GET /users/me` response is checked for its status and the user's `_id`, nam
 
 1. **WHEN** POST /users is sent with `<field>` at `<boundary>` and the other fields valid
 2. **THEN** HTTP status is 201
-3. **AND** the account holds the sent value (names and email: the returned user; password: POST /users/login with it returns 200)
+3. **AND** the account holds the sent value
+
+For a name or the email, step 3 checks the returned user; for the password, it logs in with it (`POST /users/login` returns 200).
 
 #### 5.2 POST /users with "<field>" at <boundary> returns 400 and an error for that field
 
